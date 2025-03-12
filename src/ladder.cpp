@@ -112,7 +112,8 @@ bool edit_distance_within(const std::string& str1, const std::string& str2, int 
     
     if (abs(len1 - len2) > d) return false;
 
-    int dp[len1 + 1][len2 + 1];
+    std::vector<std::vector<int>> dp(len1 + 1, std::vector<int>(len2 + 1, 0));
+
 
     for (int i = 0; i <= len1; i++) {
         for (int j = 0; j <= len2; j++) {
