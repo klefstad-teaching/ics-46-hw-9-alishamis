@@ -96,41 +96,39 @@ void print_word_ladder(const vector<string>& ladder) {
     }
 }
 
-vector<string> generate_word_ladder(const string& begin_word, const string& end_word, const set<string>& word_list) {
-    if (begin_word == end_word) {
-        return {begin_word};
-    }
-
-    queue<vector<string>> ladder_queue;
-    set<string> visited;
+bool edit_distance_within(const std::string& str1, const std::string& str2, int d) {
+    int len1 = str1.length();
+    int len2 = str2.length();
     
-    ladder_queue.push({begin_word});  // Start with the begin_word
-    visited.insert(begin_word);
-
-    while (!ladder_queue.empty()) {
-        vector<string> ladder = ladder_queue.front();
-        ladder_queue.pop();
-        string last_word = ladder.back();
-
-        // Explore all possible words from the word list
-        for (const auto& word : word_list) {
-            if (is_adjacent(last_word, word) && visited.find(word) == visited.end()) {
-                visited.insert(word);
-                vector<string> new_ladder = ladder;
-                new_ladder.push_back(word);
-                
-                // If the current word is the end_word, return the ladder
-                if (word == end_word) {
-                    return new_ladder;
-                }
-                
-                ladder_queue.push(new_ladder);
-            }
+    if (abs(len1 - len2) > d)
+        return false;
+    
+    int e = 0;
+    int i = 0, j = 0;
+    
+    while (i < len1 && j < len2) {
+        if (str1[i] != str2[j]) {
+            e++;
+            if (e > d)
+                return false;
+        }
+        
+        if (len1 > len2) {
+            i++;
+        } else if (len1 < len2) {
+            j++;
+        } else {
+            i++;
+            j++;
         }
     }
-
-    return {};  // No ladder found, return an empty vector
+    
+    e += abs(len1 - i);
+    e += abs(len2 - j);
+    
+    return e <= d;
 }
+
 
 void verify_word_ladder() {
     vector<string> test_ladder = {"hit", "hot", "dot", "dog", "cog"};
