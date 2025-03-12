@@ -37,8 +37,10 @@ bool is_adjacent(const string& word1, const string& word2) {
 }
 
 vector<string> generate_word_ladder(const string& begin_word, const string& end_word, const set<string>& word_list) {
+    // Instead of returning {begin_word}, we should return an error case
     if (begin_word == end_word) {
-        return {begin_word}; // Fixing the single-word case
+        cout << "Error: Start and end words must be different." << endl;
+        return {}; // Return empty to signal failure
     }
 
     queue<vector<string>> ladder_queue;
@@ -76,8 +78,9 @@ vector<string> generate_word_ladder(const string& begin_word, const string& end_
         }
     }
 
-    return {};
+    return {}; // No ladder found
 }
+
 
 
 
