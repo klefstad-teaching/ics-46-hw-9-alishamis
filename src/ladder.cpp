@@ -1,6 +1,5 @@
 #include "ladder.h"
 #include <algorithm>
-#include <unordered_set>
 void error(string word1, string word2, string msg) {
     cerr << "Error between words: " << word1 << " and " << word2 << ". " << msg << endl;
 }
@@ -39,18 +38,18 @@ bool is_adjacent(const string& word1, const string& word2) {
 
 vector<string> generate_word_ladder(const string& begin_word, const string& end_word, const set<string>& word_list) {
     if (begin_word == end_word) {
-        return {begin_word};
+        return {begin_word}; // Fixing the single-word case
     }
 
     queue<vector<string>> ladder_queue;
-    set<string> visited;  // Track visited words
+    set<string> visited; // Track visited words
 
     ladder_queue.push({begin_word});
     visited.insert(begin_word);
 
     while (!ladder_queue.empty()) {
         int level_size = ladder_queue.size(); // Process level-by-level to avoid unnecessary visits
-        set<string> words_to_mark;  // Words to mark visited only after this level is processed
+        set<string> words_to_mark;  // Words to mark visited after this level
 
         for (int i = 0; i < level_size; i++) {
             vector<string> ladder = ladder_queue.front();
@@ -63,15 +62,15 @@ vector<string> generate_word_ladder(const string& begin_word, const string& end_
                     new_ladder.push_back(word);
 
                     if (word == end_word) {
-                        return new_ladder;
+                        return new_ladder; // Exit immediately upon finding the solution
                     }
 
                     ladder_queue.push(new_ladder);
-                    words_to_mark.insert(word); // Mark only after finishing this level
+                    words_to_mark.insert(word); // Only mark words at the end of this level
                 }
             }
         }
-        
+
         for (const auto& word : words_to_mark) {
             visited.insert(word);
         }
@@ -79,6 +78,7 @@ vector<string> generate_word_ladder(const string& begin_word, const string& end_
 
     return {};
 }
+
 
 
 void load_words(set<string>& word_list, const string& file_name) {
