@@ -6,6 +6,8 @@ void error(string word1, string word2, string msg) {
 }
 
 bool is_adjacent(const string& word1, const string& word2) {
+    if (word1 == word2) return true; // Ensure identical words return true
+
     int len1 = word1.size();
     int len2 = word2.size();
     
@@ -18,11 +20,10 @@ bool is_adjacent(const string& word1, const string& word2) {
             edit_count++;
             if (edit_count > 1) return false;
 
-            // Adjust pointers based on length differences
             if (len1 > len2) {
-                i++;
+                i++;  // Extra character in word1
             } else if (len1 < len2) {
-                j++;
+                j++;  // Extra character in word2
             } else {
                 i++; 
                 j++;
@@ -36,42 +37,44 @@ bool is_adjacent(const string& word1, const string& word2) {
     return edit_count + abs(len1 - i) + abs(len2 - j) == 1;
 }
 
- vector<string> generate_word_ladder(const string& begin_word, const string& end_word, const set<string>& word_list) {
+vector<string> generate_word_ladder(const string& begin_word, const string& end_word, const set<string>& word_list) {
     if (begin_word == end_word) {
-        return {begin_word};  // Should return a list with only the word itself
+        return {begin_word};
     }
 
     queue<vector<string>> ladder_queue;
-    unordered_set<string> visited;
-    unordered_set<string> level_visited;
+    set<string> visited;  // Track visited words
 
     ladder_queue.push({begin_word});
     visited.insert(begin_word);
 
     while (!ladder_queue.empty()) {
-        int size = ladder_queue.size();
-        level_visited.clear();
+        int level_size = ladder_queue.size(); // Process level-by-level to avoid unnecessary visits
+        set<string> words_to_mark;  // Words to mark visited only after this level is processed
 
-        for (int i = 0; i < size; i++) {
+        for (int i = 0; i < level_size; i++) {
             vector<string> ladder = ladder_queue.front();
             ladder_queue.pop();
             string last_word = ladder.back();
 
             for (const auto& word : word_list) {
-                if (is_adjacent(last_word, word) && visited.find(word) == visited.end()) {
+                if (visited.find(word) == visited.end() && is_adjacent(last_word, word)) {
                     vector<string> new_ladder = ladder;
                     new_ladder.push_back(word);
-                    
-                    if (word == end_word) return new_ladder;
-                    
+
+                    if (word == end_word) {
+                        return new_ladder;
+                    }
+
                     ladder_queue.push(new_ladder);
-                    level_visited.insert(word);
+                    words_to_mark.insert(word); // Mark only after finishing this level
                 }
             }
         }
         
-        // Update visited set after finishing the level
-        visited.insert(level_visited.begin(), level_visited.end());
+        for (const auto& word : words_to_mark) {
+            visited.insert(word);
+        }
     }
 
     return {};
