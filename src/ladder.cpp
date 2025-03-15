@@ -61,6 +61,20 @@ vector<string> generate_word_ladder(const string& begin_word, const string& end_
     return {}; // No ladder found
 }
 
+void load_words(set<string>& word_list, const string& file_name) {
+    ifstream file(file_name);
+    if (!file.is_open()) {
+        cerr << "Error: Unable to open file " << file_name << endl;
+        return;
+    }
+
+    string word;
+    while (file >> word) {
+        word_list.insert(word);
+    }
+
+    file.close();
+}
 
 void print_word_ladder(const vector<string>& ladder) {
     if (ladder.empty()) {
