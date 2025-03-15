@@ -1,6 +1,7 @@
 #include "ladder.h"
 #include <algorithm>
 #include <unordered_set>
+#include <unordered_map>
 
 void error(string word1, string word2, string msg) {
     cerr << "Error between words: " << word1 << " and " << word2 << ". " << msg << endl;
@@ -9,6 +10,41 @@ void error(string word1, string word2, string msg) {
 // Update is_adjacent to use edit_distance_within for a distance of 1
 bool is_adjacent(const string& word1, const string& word2) {
     return edit_distance_within(word1, word2, 1);  // Check if edit distance is within 1
+}
+
+// Cache for edit distances between word pairs
+unordered_map<string, unordered_map<string, int>> edit_distance_cache;
+
+bool edit_distance_within(const std::string& str1, const std::string& str2, int d) {
+    int len1 = str1.length();
+    int len2 = str2.length();
+    
+    if (abs(len1 - len2) > d) return false;
+
+    // Check cache first
+    if (edit_distance_cache[str1].find(str2) != edit_distance_cache[str1].end()) {
+        return edit_distance_cache[str1][str2] <= d;
+    }
+
+    std::vector<std::vector<int>> dp(len1 + 1, std::vector<int>(len2 + 1, 0));
+
+    for (int i = 0; i <= len1; i++) {
+        for (int j = 0; j <= len2; j++) {
+            if (i == 0)
+                dp[i][j] = j;  // Insertions
+            else if (j == 0)
+                dp[i][j] = i;  // Deletions
+            else if (str1[i - 1] == str2[j - 1])
+                dp[i][j] = dp[i - 1][j - 1];  // Match
+            else
+                dp[i][j] = 1 + min({dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]});  // Edit
+        }
+    }
+    
+    // Store result in cache
+    edit_distance_cache[str1][str2] = dp[len1][len2];
+    
+    return dp[len1][len2] <= d;
 }
 
 vector<string> generate_word_ladder(const string& begin_word, const string& end_word, const set<string>& word_list) {
@@ -23,6 +59,14 @@ vector<string> generate_word_ladder(const string& begin_word, const string& end_
     ladder_queue.push({begin_word});
     visited.insert(begin_word); // Mark visited immediately
 
+    // Filter the word list to only include words of the same length as the begin_word
+    set<string> filtered_word_list;
+    for (const auto& word : word_list) {
+        if (word.length() == begin_word.length()) {
+            filtered_word_list.insert(word);
+        }
+    }
+
     while (!ladder_queue.empty()) {
         int level_size = ladder_queue.size();  // Process level-by-level
         unordered_set<string> words_to_mark;  // Mark words to visit in this level
@@ -32,7 +76,7 @@ vector<string> generate_word_ladder(const string& begin_word, const string& end_
             ladder_queue.pop();
             string last_word = ladder.back();
 
-            for (const auto& word : word_list) {
+            for (const auto& word : filtered_word_list) {
                 if (visited.find(word) == visited.end() && is_adjacent(last_word, word)) {
                     vector<string> new_ladder = ladder;
                     new_ladder.push_back(word);
@@ -81,30 +125,6 @@ void print_word_ladder(const vector<string>& ladder) {
         }
         cout << endl;
     }
-}
-
-bool edit_distance_within(const std::string& str1, const std::string& str2, int d) {
-    int len1 = str1.length();
-    int len2 = str2.length();
-    
-    if (abs(len1 - len2) > d) return false;
-
-    std::vector<std::vector<int>> dp(len1 + 1, std::vector<int>(len2 + 1, 0));
-
-    for (int i = 0; i <= len1; i++) {
-        for (int j = 0; j <= len2; j++) {
-            if (i == 0)
-                dp[i][j] = j;  // Insertions
-            else if (j == 0)
-                dp[i][j] = i;  // Deletions
-            else if (str1[i - 1] == str2[j - 1])
-                dp[i][j] = dp[i - 1][j - 1];  // Match
-            else
-                dp[i][j] = 1 + min({dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]});  // Edit
-        }
-    }
-    
-    return dp[len1][len2] <= d;
 }
 
 void verify_word_ladder() {
