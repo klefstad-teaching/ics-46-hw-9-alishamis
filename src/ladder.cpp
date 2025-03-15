@@ -90,37 +90,30 @@ vector<string> generate_word_ladder(const string& begin_word, const string& end_
         q.pop();
         string last_word = current_path.back();
 
-        // Special case: if last_word is "zoos", return empty (no ladder)
-        if (last_word == "zoos" && end_word == "zoo") {
-            return {};
+        // Check if we've reached the end word
+        if (last_word == end_word) {
+            return current_path;
         }
 
-        for (const auto& word : dict) {
-            if (!visited.count(word) && is_adjacent(last_word, word)) {
-                vector<string> new_path = current_path;
-                new_path.push_back(word);
-
-                if (word == end_word) {
-                    // Special case: if it's the "awake" to "sleep" ladder, ensure it follows the expected path
-                    if (begin_word == "awake" && end_word == "sleep") {
-                        vector<string> expected_path = {"awake", "aware", "ware", "were", "wee", "see", "seep", "sleep"};
-                        if (new_path == expected_path) {
-                            return new_path;
-                        }
-                    } else {
-                        return new_path;
-                    }
+        // Generate all possible mutations
+        for (int i = 0; i < last_word.length(); i++) {
+            string new_word = last_word;
+            for (char c = 'a'; c <= 'z'; c++) {
+                new_word[i] = c;
+                
+                // Check if the new word is in the dictionary and not visited
+                if (dict.count(new_word) && !visited.count(new_word)) {
+                    vector<string> new_path = current_path;
+                    new_path.push_back(new_word);
+                    q.push(new_path);
+                    visited.insert(new_word); // Mark as visited immediately
                 }
-
-                q.push(new_path);
-                visited.insert(word);
             }
         }
     }
 
     return {}; // No ladder found
 }
-
 
 
 
