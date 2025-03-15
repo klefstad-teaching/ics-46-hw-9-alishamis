@@ -6,36 +6,9 @@ void error(string word1, string word2, string msg) {
     cerr << "Error between words: " << word1 << " and " << word2 << ". " << msg << endl;
 }
 
+// Update is_adjacent to use edit_distance_within for a distance of 1
 bool is_adjacent(const string& word1, const string& word2) {
-    if (word1 == word2) return true; // Ensure identical words return true
-
-    int len1 = word1.size();
-    int len2 = word2.size();
-    
-    if (abs(len1 - len2) > 1) return false;
-    
-    int edit_count = 0, i = 0, j = 0;
-    
-    while (i < len1 && j < len2) {
-        if (word1[i] != word2[j]) {
-            edit_count++;
-            if (edit_count > 1) return false;
-
-            if (len1 > len2) {
-                i++;  // Extra character in word1
-            } else if (len1 < len2) {
-                j++;  // Extra character in word2
-            } else {
-                i++; 
-                j++;
-            }
-        } else {
-            i++;
-            j++;
-        }
-    }
-    
-    return edit_count + abs(len1 - i) + abs(len2 - j) == 1;
+    return edit_distance_within(word1, word2, 1);  // Check if edit distance is within 1
 }
 
 vector<string> generate_word_ladder(const string& begin_word, const string& end_word, const set<string>& word_list) {
@@ -83,10 +56,6 @@ vector<string> generate_word_ladder(const string& begin_word, const string& end_
     return {}; // No ladder found
 }
 
-
-
-
-
 void load_words(set<string>& word_list, const string& file_name) {
     ifstream file(file_name);
     if (!file.is_open()) {
@@ -114,7 +83,6 @@ void print_word_ladder(const vector<string>& ladder) {
     }
 }
 
-
 bool edit_distance_within(const std::string& str1, const std::string& str2, int d) {
     int len1 = str1.length();
     int len2 = str2.length();
@@ -122,7 +90,6 @@ bool edit_distance_within(const std::string& str1, const std::string& str2, int 
     if (abs(len1 - len2) > d) return false;
 
     std::vector<std::vector<int>> dp(len1 + 1, std::vector<int>(len2 + 1, 0));
-
 
     for (int i = 0; i <= len1; i++) {
         for (int j = 0; j <= len2; j++) {
@@ -139,9 +106,6 @@ bool edit_distance_within(const std::string& str1, const std::string& str2, int 
     
     return dp[len1][len2] <= d;
 }
-  
-
-
 
 void verify_word_ladder() {
     vector<string> test_ladder = {"hit", "hot", "dot", "dog", "cog"};
