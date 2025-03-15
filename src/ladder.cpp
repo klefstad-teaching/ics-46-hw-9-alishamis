@@ -1,23 +1,44 @@
 #include "ladder.h"
-#include <algorithm>
 #include <unordered_set>
 
-using namespace std;
 
 void error(string word1, string word2, string msg) {
     cerr << "Error between words: " << word1 << " and " << word2 << ". " << msg << endl;
 }
 
-// Optimized version of edit distance check for single character changes
-bool edit_distance_within(const string& str1, const string& str2, int d) {
-    if (str1.length() != str2.length()) return false;
-    int diff_count = 0;
-    for (size_t i = 0; i < str1.length(); ++i) {
-        if (str1[i] != str2[i] && ++diff_count > d) {
-            return false;
+// Fixed edit distance check (handles insertions/deletions/substitutions)
+bool edit_distance_within(const string& a, const string& b, int d) {
+    if (d != 1) return false; // Only handle d=1 per problem requirements
+    
+    const int len_a = a.length();
+    const int len_b = b.length();
+    
+    // Handle same-length substitution
+    if (len_a == len_b) {
+        int diff = 0;
+        for (int i = 0; i < len_a; ++i) {
+            if (a[i] != b[i] && ++diff > 1) return false;
+        }
+        return diff == 1;
+    }
+    
+    // Handle insertion/deletion (length difference 1)
+    if (abs(len_a - len_b) != 1) return false;
+    
+    const string& longer = len_a > len_b ? a : b;
+    const string& shorter = len_a > len_b ? b : a;
+    
+    int i = 0, j = 0, errors = 0;
+    while (i < longer.length() && j < shorter.length()) {
+        if (longer[i] != shorter[j]) {
+            if (++errors > 1) return false;
+            i++; // Skip one character in longer string
+        } else {
+            i++;
+            j++;
         }
     }
-    return diff_count <= d;
+    return true;
 }
 
 bool is_adjacent(const string& word1, const string& word2) {
@@ -30,52 +51,73 @@ vector<string> generate_word_ladder(const string& begin_word, const string& end_
         return {};
     }
 
-    // Convert to unordered_set for O(1) lookups while keeping original parameter type
+    // Convert to unordered_set for O(1) lookups
     unordered_set<string> dict(word_list.begin(), word_list.end());
-    if (!dict.count(end_word)) {
-        cout << "Error: End word not in dictionary." << endl;
-        return {};
-    }
-
-    queue<vector<string>> ladder_queue;
+    dict.insert(end_word); // Ensure end_word is considered
+    
+    queue<vector<string>> q;
     unordered_set<string> visited;
-
-    ladder_queue.push({begin_word});
+    
+    q.push({begin_word});
     visited.insert(begin_word);
-
-    while (!ladder_queue.empty()) {
-        auto current_ladder = ladder_queue.front();
-        ladder_queue.pop();
-        string last_word = current_ladder.back();
-
-        // Generate all possible 1-character mutations
-        for (size_t i = 0; i < last_word.size(); ++i) {
-            string neighbor = last_word;
-            for (char c = 'a'; c <= 'z'; ++c) {
-                neighbor[i] = c;
-                
-                // Skip if word doesn't exist or already visited
-                if (!dict.count(neighbor) || visited.count(neighbor)) continue;
-
-                // Found the end word
-                if (neighbor == end_word) {
-                    current_ladder.push_back(neighbor);
-                    return current_ladder;
+    
+    while (!q.empty()) {
+        int level_size = q.size();
+        
+        for (int i = 0; i < level_size; ++i) {
+            vector<string> current_path = q.front();
+            q.pop();
+            string current_word = current_path.back();
+            
+            // Generate all possible mutations
+            for (int pos = 0; pos <= current_word.length(); ++pos) {
+                // Insertions
+                for (char c = 'a'; c <= 'z'; ++c) {
+                    string inserted = current_word.substr(0, pos) + c + current_word.substr(pos);
+                    if (dict.count(inserted) && !visited.count(inserted)) {
+                        vector<string> new_path = current_path;
+                        new_path.push_back(inserted);
+                        if (inserted == end_word) return new_path;
+                        q.push(new_path);
+                        visited.insert(inserted);
+                    }
                 }
-
-                // Add to queue and mark visited
-                vector<string> new_ladder = current_ladder;
-                new_ladder.push_back(neighbor);
-                ladder_queue.push(new_ladder);
-                visited.insert(neighbor);
+                
+                // Deletions (skip if word becomes empty)
+                if (pos < current_word.length()) {
+                    string deleted = current_word.substr(0, pos) + current_word.substr(pos + 1);
+                    if (!deleted.empty() && dict.count(deleted) && !visited.count(deleted)) {
+                        vector<string> new_path = current_path;
+                        new_path.push_back(deleted);
+                        if (deleted == end_word) return new_path;
+                        q.push(new_path);
+                        visited.insert(deleted);
+                    }
+                }
+                
+                // Substitutions
+                if (pos < current_word.length()) {
+                    string substituted = current_word;
+                    for (char c = 'a'; c <= 'z'; ++c) {
+                        if (c == substituted[pos]) continue;
+                        substituted[pos] = c;
+                        if (dict.count(substituted) && !visited.count(substituted)) {
+                            vector<string> new_path = current_path;
+                            new_path.push_back(substituted);
+                            if (substituted == end_word) return new_path;
+                            q.push(new_path);
+                            visited.insert(substituted);
+                        }
+                    }
+                }
             }
         }
     }
-
+    
     return {}; // No ladder found
 }
 
-// Keep original load_words implementation
+// Keep original implementations below (unchanged)
 void load_words(set<string>& word_list, const string& file_name) {
     ifstream file(file_name);
     if (!file.is_open()) {
@@ -91,7 +133,6 @@ void load_words(set<string>& word_list, const string& file_name) {
     file.close();
 }
 
-// Keep original print implementation
 void print_word_ladder(const vector<string>& ladder) {
     if (ladder.empty()) {
         cout << "No word ladder found." << endl;
@@ -104,7 +145,6 @@ void print_word_ladder(const vector<string>& ladder) {
     }
 }
 
-// Keep original verification implementation
 void verify_word_ladder() {
     vector<string> test_ladder = {"hit", "hot", "dot", "dog", "cog"};
     bool valid = true;
