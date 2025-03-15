@@ -70,22 +70,29 @@ vector<string> generate_word_ladder(const string& begin_word, const string& end_
             return current_path;
         }
 
-        // Generate neighbors of last_word
+        // Generate and sort neighbors alphabetically
+        vector<string> neighbors;
         for (const auto& word : dict) {
             if (!visited.count(word) && is_adjacent(last_word, word)) {
-                // Ensure all words except the start word are in the dictionary
                 if (word_list.count(word) || word == end_word) {
-                    vector<string> new_path = current_path;
-                    new_path.push_back(word);
-                    q.push(new_path);
-                    visited.insert(word);
+                    neighbors.push_back(word);
                 }
             }
+        }
+        sort(neighbors.begin(), neighbors.end());
+
+        // Process sorted neighbors
+        for (const auto& word : neighbors) {
+            vector<string> new_path = current_path;
+            new_path.push_back(word);
+            q.push(new_path);
+            visited.insert(word);
         }
     }
 
     return {}; // No ladder found
 }
+
 
 
 
