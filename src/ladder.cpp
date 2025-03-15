@@ -40,35 +40,6 @@ bool edit_distance_within(const string& a, const string& b, int d) {
 }
   
 
-bool is_adjacent(const string& word1, const string& word2) {
-    if (abs((int)word1.length() - (int)word2.length()) > 1) return false;
-    
-    if (word1.length() == word2.length()) {
-        int diff = 0;
-        for (size_t i = 0; i < word1.length(); i++) {
-            if (word1[i] != word2[i] && ++diff > 1) return false;
-        }
-        return diff == 1;
-    } else {
-        const string& longer = word1.length() > word2.length() ? word1 : word2;
-        const string& shorter = word1.length() > word2.length() ? word2 : word1;
-        int i = 0, j = 0, diff = 0;
-        while (i < longer.length()) {
-            if (j < shorter.length() && longer[i] != shorter[j]) {
-                if (++diff > 1) return false;
-                i++;
-            } else if (j >= shorter.length()) {
-                if (++diff > 1) return false;
-                i++;
-            } else {
-                i++; j++;
-            }
-        }
-        return true;
-    }
-}
-
-
 
 vector<string> generate_word_ladder(const string& begin_word, const string& end_word, const set<string>& word_list) {
     if (begin_word == end_word) {
@@ -86,34 +57,34 @@ vector<string> generate_word_ladder(const string& begin_word, const string& end_
     visited.insert(begin_word);
 
     while (!q.empty()) {
+        // REMOVED: int level_size = q.size();
+        // REMOVED: vector<string> level_visited;
+
+        // REMOVED: for (int i = 0; i < level_size; ++i) {
         vector<string> current_path = q.front();
         q.pop();
         string last_word = current_path.back();
 
-        // Check if we've reached the end word
-        if (last_word == end_word) {
-            return current_path;
-        }
+        // CHANGED: Simplified neighbor finding
+        for (const auto& word : dict) {
+            if (!visited.count(word) && is_adjacent(last_word, word)) {
+                vector<string> new_path = current_path;
+                new_path.push_back(word);
 
-        // Generate all possible mutations
-        for (int i = 0; i < last_word.length(); i++) {
-            string new_word = last_word;
-            for (char c = 'a'; c <= 'z'; c++) {
-                new_word[i] = c;
-                
-                // Check if the new word is in the dictionary and not visited
-                if (dict.count(new_word) && !visited.count(new_word)) {
-                    vector<string> new_path = current_path;
-                    new_path.push_back(new_word);
-                    q.push(new_path);
-                    visited.insert(new_word); // Mark as visited immediately
-                }
+                if (word == end_word) return new_path;
+
+                q.push(new_path);
+                visited.insert(word); // Moved here
             }
         }
+
+        // REMOVED: Separate visited insertion
     }
 
     return {}; // No ladder found
 }
+
+
 
 
 
