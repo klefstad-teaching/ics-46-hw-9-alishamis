@@ -1,5 +1,7 @@
 #include "ladder.h"
 #include <algorithm>
+#include <unordered_set>
+
 void error(string word1, string word2, string msg) {
     cerr << "Error between words: " << word1 << " and " << word2 << ". " << msg << endl;
 }
@@ -37,21 +39,20 @@ bool is_adjacent(const string& word1, const string& word2) {
 }
 
 vector<string> generate_word_ladder(const string& begin_word, const string& end_word, const set<string>& word_list) {
-    // Instead of returning {begin_word}, we should return an error case
     if (begin_word == end_word) {
         cout << "Error: Start and end words must be different." << endl;
         return {}; // Return empty to signal failure
     }
 
     queue<vector<string>> ladder_queue;
-    set<string> visited; // Track visited words
+    unordered_set<string> visited;  // Use unordered_set for faster lookup
 
     ladder_queue.push({begin_word});
-    visited.insert(begin_word);
+    visited.insert(begin_word); // Mark visited immediately
 
     while (!ladder_queue.empty()) {
-        int level_size = ladder_queue.size(); // Process level-by-level to avoid unnecessary visits
-        set<string> words_to_mark;  // Words to mark visited after this level
+        int level_size = ladder_queue.size();  // Process level-by-level
+        unordered_set<string> words_to_mark;  // Mark words to visit in this level
 
         for (int i = 0; i < level_size; i++) {
             vector<string> ladder = ladder_queue.front();
@@ -64,15 +65,16 @@ vector<string> generate_word_ladder(const string& begin_word, const string& end_
                     new_ladder.push_back(word);
 
                     if (word == end_word) {
-                        return new_ladder; // Exit immediately upon finding the solution
+                        return new_ladder;  // Found the shortest path
                     }
 
                     ladder_queue.push(new_ladder);
-                    words_to_mark.insert(word); // Only mark words at the end of this level
+                    words_to_mark.insert(word);  // Mark words to visit
                 }
             }
         }
 
+        // Move words from temp set to visited set (prevents unnecessary revisits)
         for (const auto& word : words_to_mark) {
             visited.insert(word);
         }
@@ -80,6 +82,7 @@ vector<string> generate_word_ladder(const string& begin_word, const string& end_
 
     return {}; // No ladder found
 }
+
 
 
 
