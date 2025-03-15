@@ -6,32 +6,30 @@ void error(string word1, string word2, string msg) {
     cerr << "Error between words: " << word1 << " and " << word2 << ". " << msg << endl;
 }
 
-// Fixed edit distance check (handles insertions/deletions/substitutions)
 bool edit_distance_within(const string& a, const string& b, int d) {
-    if (d != 1) return false; // Only handle d=1 per problem requirements
-    
     const int len_a = a.length();
     const int len_b = b.length();
-    
-    // Handle same-length substitution
+
+    // Early exit for large length differences
+    if (abs(len_a - len_b) > d) return false;
+
+    // Handle same-length substitution or identical words
     if (len_a == len_b) {
         int diff = 0;
         for (int i = 0; i < len_a; ++i) {
-            if (a[i] != b[i] && ++diff > 1) return false;
+            if (a[i] != b[i] && ++diff > d) return false;
         }
-        return diff == 1;
+        return true; // Identical words or within substitution distance
     }
-    
+
     // Handle insertion/deletion (length difference 1)
-    if (abs(len_a - len_b) != 1) return false;
-    
     const string& longer = len_a > len_b ? a : b;
     const string& shorter = len_a > len_b ? b : a;
-    
+
     int i = 0, j = 0, errors = 0;
     while (i < longer.length() && j < shorter.length()) {
         if (longer[i] != shorter[j]) {
-            if (++errors > 1) return false;
+            if (++errors > d) return false;
             i++; // Skip one character in longer string
         } else {
             i++;
@@ -40,10 +38,12 @@ bool edit_distance_within(const string& a, const string& b, int d) {
     }
     return true;
 }
+  
 
 bool is_adjacent(const string& word1, const string& word2) {
     return edit_distance_within(word1, word2, 1);
 }
+
 
 vector<string> generate_word_ladder(const string& begin_word, const string& end_word, const set<string>& word_list) {
     if (begin_word == end_word) {
@@ -51,50 +51,43 @@ vector<string> generate_word_ladder(const string& begin_word, const string& end_
         return {};
     }
 
-    // Convert to unordered_set for O(1) lookups
     unordered_set<string> dict(word_list.begin(), word_list.end());
     dict.insert(end_word); // Ensure end_word is considered
-    
+
     queue<vector<string>> q;
     unordered_set<string> visited;
-    
+
     q.push({begin_word});
     visited.insert(begin_word);
-    
+
     while (!q.empty()) {
         int level_size = q.size();
-        
+        vector<string> level_visited;
+
         for (int i = 0; i < level_size; ++i) {
             vector<string> current_path = q.front();
             q.pop();
             string current_word = current_path.back();
-            
+
             // Generate all possible mutations
+            vector<string> neighbors;
             for (int pos = 0; pos <= current_word.length(); ++pos) {
                 // Insertions
                 for (char c = 'a'; c <= 'z'; ++c) {
                     string inserted = current_word.substr(0, pos) + c + current_word.substr(pos);
                     if (dict.count(inserted) && !visited.count(inserted)) {
-                        vector<string> new_path = current_path;
-                        new_path.push_back(inserted);
-                        if (inserted == end_word) return new_path;
-                        q.push(new_path);
-                        visited.insert(inserted);
+                        neighbors.push_back(inserted);
                     }
                 }
-                
-                // Deletions (skip if word becomes empty)
+
+                // Deletions
                 if (pos < current_word.length()) {
                     string deleted = current_word.substr(0, pos) + current_word.substr(pos + 1);
                     if (!deleted.empty() && dict.count(deleted) && !visited.count(deleted)) {
-                        vector<string> new_path = current_path;
-                        new_path.push_back(deleted);
-                        if (deleted == end_word) return new_path;
-                        q.push(new_path);
-                        visited.insert(deleted);
+                        neighbors.push_back(deleted);
                     }
                 }
-                
+
                 // Substitutions
                 if (pos < current_word.length()) {
                     string substituted = current_word;
@@ -102,20 +95,31 @@ vector<string> generate_word_ladder(const string& begin_word, const string& end_
                         if (c == substituted[pos]) continue;
                         substituted[pos] = c;
                         if (dict.count(substituted) && !visited.count(substituted)) {
-                            vector<string> new_path = current_path;
-                            new_path.push_back(substituted);
-                            if (substituted == end_word) return new_path;
-                            q.push(new_path);
-                            visited.insert(substituted);
+                            neighbors.push_back(substituted);
                         }
                     }
                 }
             }
+
+            // Sort neighbors alphabetically to ensure consistent output
+            sort(neighbors.begin(), neighbors.end());
+
+            for (const auto& neighbor : neighbors) {
+                vector<string> new_path = current_path;
+                new_path.push_back(neighbor);
+                if (neighbor == end_word) return new_path;
+
+                q.push(new_path);
+                level_visited.push_back(neighbor);
+            }
         }
+
+        for (const auto& word : level_visited) visited.insert(word);
     }
-    
+
     return {}; // No ladder found
 }
+
 
 // Keep original implementations below (unchanged)
 void load_words(set<string>& word_list, const string& file_name) {
