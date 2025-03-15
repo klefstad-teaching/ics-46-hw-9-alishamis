@@ -1,4 +1,5 @@
 #include "ladder.h"
+#include <algorithm>
 #include <unordered_set>
 
 
@@ -40,8 +41,6 @@ bool edit_distance_within(const string& a, const string& b, int d) {
     return true;
 }
   
-
-
 vector<string> generate_word_ladder(const string& begin_word, const string& end_word, const set<string>& word_list) {
     if (begin_word == end_word) {
         cout << "Error: Start and end words must be different." << endl;
@@ -58,32 +57,60 @@ vector<string> generate_word_ladder(const string& begin_word, const string& end_
     visited.insert(begin_word);
 
     while (!q.empty()) {
-        // REMOVED: int level_size = q.size();
-        // REMOVED: vector<string> level_visited;
-
-        // REMOVED: for (int i = 0; i < level_size; ++i) {
         vector<string> current_path = q.front();
         q.pop();
         string last_word = current_path.back();
 
-        // CHANGED: Simplified neighbor finding
-        for (const auto& word : dict) {
-            if (!visited.count(word) && is_adjacent(last_word, word)) {
-                vector<string> new_path = current_path;
-                new_path.push_back(word);
+        vector<string> neighbors;
 
-                if (word == end_word) return new_path;
+        // Generate all possible neighbors
+        for (int pos = 0; pos <= last_word.length(); ++pos) {
+            // Insertions
+            for (char c = 'a'; c <= 'z'; ++c) {
+                string inserted = last_word.substr(0, pos) + c + last_word.substr(pos);
+                if (dict.count(inserted) && !visited.count(inserted)) {
+                    neighbors.push_back(inserted);
+                }
+            }
 
-                q.push(new_path);
-                visited.insert(word); // Moved here
+            // Deletions
+            if (pos < last_word.length()) {
+                string deleted = last_word.substr(0, pos) + last_word.substr(pos + 1);
+                if (!deleted.empty() && dict.count(deleted) && !visited.count(deleted)) {
+                    neighbors.push_back(deleted);
+                }
+            }
+
+            // Substitutions
+            if (pos < last_word.length()) {
+                string substituted = last_word;
+                for (char c = 'a'; c <= 'z'; ++c) {
+                    if (c == substituted[pos]) continue;
+                    substituted[pos] = c;
+                    if (dict.count(substituted) && !visited.count(substituted)) {
+                        neighbors.push_back(substituted);
+                    }
+                }
             }
         }
 
-        // REMOVED: Separate visited insertion
+        // Sort neighbors alphabetically to ensure consistent output
+        sort(neighbors.begin(), neighbors.end());
+
+        for (const auto& neighbor : neighbors) {
+            vector<string> new_path = current_path;
+            new_path.push_back(neighbor);
+
+            if (neighbor == end_word) return new_path;
+
+            q.push(new_path);
+            visited.insert(neighbor); // Mark as visited immediately
+        }
     }
 
     return {}; // No ladder found
 }
+
 
 
 
