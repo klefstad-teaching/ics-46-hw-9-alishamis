@@ -47,6 +47,11 @@ vector<string> generate_word_ladder(const string& begin_word, const string& end_
         return {};
     }
 
+    // Check if end_word is in the dictionary
+    if (word_list.find(end_word) == word_list.end()) {
+        return {}; // No ladder possible if end word is not in dictionary
+    }
+
     unordered_set<string> dict(word_list.begin(), word_list.end());
     dict.insert(end_word); // Ensure end_word is considered
 
@@ -61,56 +66,26 @@ vector<string> generate_word_ladder(const string& begin_word, const string& end_
         q.pop();
         string last_word = current_path.back();
 
-        vector<string> neighbors;
-
-        // Generate all possible neighbors
-        for (int pos = 0; pos <= last_word.length(); ++pos) {
-            // Insertions
-            for (char c = 'a'; c <= 'z'; ++c) {
-                string inserted = last_word.substr(0, pos) + c + last_word.substr(pos);
-                if (dict.count(inserted) && !visited.count(inserted)) {
-                    neighbors.push_back(inserted);
-                }
-            }
-
-            // Deletions
-            if (pos < last_word.length()) {
-                string deleted = last_word.substr(0, pos) + last_word.substr(pos + 1);
-                if (!deleted.empty() && dict.count(deleted) && !visited.count(deleted)) {
-                    neighbors.push_back(deleted);
-                }
-            }
-
-            // Substitutions
-            if (pos < last_word.length()) {
-                string substituted = last_word;
-                for (char c = 'a'; c <= 'z'; ++c) {
-                    if (c == substituted[pos]) continue;
-                    substituted[pos] = c;
-                    if (dict.count(substituted) && !visited.count(substituted)) {
-                        neighbors.push_back(substituted);
-                    }
-                }
-            }
+        if (last_word == end_word) {
+            return current_path;
         }
 
-        // Sort neighbors alphabetically to ensure consistent output
-        sort(neighbors.begin(), neighbors.end());
-
-        for (const auto& neighbor : neighbors) {
-            vector<string> new_path = current_path;
-            new_path.push_back(neighbor);
-
-            if (neighbor == end_word) return new_path;
-
-            q.push(new_path);
-            visited.insert(neighbor); // Mark as visited immediately
+        // Generate neighbors of last_word
+        for (const auto& word : dict) {
+            if (!visited.count(word) && is_adjacent(last_word, word)) {
+                // Ensure all words except the start word are in the dictionary
+                if (word_list.count(word) || word == end_word) {
+                    vector<string> new_path = current_path;
+                    new_path.push_back(word);
+                    q.push(new_path);
+                    visited.insert(word);
+                }
+            }
         }
     }
 
     return {}; // No ladder found
 }
-
 
 
 
