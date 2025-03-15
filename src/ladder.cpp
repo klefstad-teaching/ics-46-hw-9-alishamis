@@ -26,7 +26,8 @@ bool edit_distance_within(const string& a, const string& b, int d) {
     const string& longer = len_a > len_b ? a : b;
     const string& shorter = len_a > len_b ? b : a;
 
-    int i = 0, j = 0, errors = 0;
+    size_t i = 0, j = 0;
+    int errors = 0;
     while (i < longer.length() && j < shorter.length()) {
         if (longer[i] != shorter[j]) {
             if (++errors > d) return false;
@@ -115,6 +116,11 @@ void print_word_ladder(const vector<string>& ladder) {
         cout << endl;
     }
 }
+
+bool is_adjacent(const string& word1, const string& word2) {
+    return edit_distance_within(word1, word2, 1);
+}
+
 
 void verify_word_ladder() {
     vector<string> test_ladder = {"hit", "hot", "dot", "dog", "cog"};
