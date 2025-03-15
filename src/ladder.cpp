@@ -1,4 +1,5 @@
 #include "ladder.h"
+#include <algorithm>
 #include <unordered_set>
 
 
@@ -41,8 +42,14 @@ bool edit_distance_within(const string& a, const string& b, int d) {
   
 
 bool is_adjacent(const string& word1, const string& word2) {
-    return edit_distance_within(word1, word2, 1);
+    if (word1.length() != word2.length()) return false;
+    int diff = 0;
+    for (size_t i = 0; i < word1.length(); i++) {
+        if (word1[i] != word2[i] && ++diff > 1) return false;
+    }
+    return diff == 1;
 }
+
 
 
 vector<string> generate_word_ladder(const string& begin_word, const string& end_word, const set<string>& word_list) {
@@ -61,60 +68,25 @@ vector<string> generate_word_ladder(const string& begin_word, const string& end_
     visited.insert(begin_word);
 
     while (!q.empty()) {
-        int level_size = q.size();
-        vector<string> level_visited;
+        vector<string> current_path = q.front();
+        q.pop();
+        string current_word = current_path.back();
 
-        for (int i = 0; i < level_size; ++i) {
-            vector<string> current_path = q.front();
-            q.pop();
-            string current_word = current_path.back();
-
-            // Generate all possible mutations
-            vector<string> neighbors;
-            for (int pos = 0; pos <= current_word.length(); ++pos) {
-                // Insertions
-                for (char c = 'a'; c <= 'z'; ++c) {
-                    string inserted = current_word.substr(0, pos) + c + current_word.substr(pos);
-                    if (dict.count(inserted) && !visited.count(inserted)) {
-                        neighbors.push_back(inserted);
-                    }
+        // Only allow single-letter substitutions
+        for (int i = 0; i < current_word.length(); i++) {
+            string new_word = current_word;
+            for (char c = 'a'; c <= 'z'; c++) {
+                if (c == current_word[i]) continue;
+                new_word[i] = c;
+                if (dict.count(new_word) && !visited.count(new_word)) {
+                    vector<string> new_path = current_path;
+                    new_path.push_back(new_word);
+                    if (new_word == end_word) return new_path;
+                    q.push(new_path);
+                    visited.insert(new_word);
                 }
-
-                // Deletions
-                if (pos < current_word.length()) {
-                    string deleted = current_word.substr(0, pos) + current_word.substr(pos + 1);
-                    if (!deleted.empty() && dict.count(deleted) && !visited.count(deleted)) {
-                        neighbors.push_back(deleted);
-                    }
-                }
-
-                // Substitutions
-                if (pos < current_word.length()) {
-                    string substituted = current_word;
-                    for (char c = 'a'; c <= 'z'; ++c) {
-                        if (c == substituted[pos]) continue;
-                        substituted[pos] = c;
-                        if (dict.count(substituted) && !visited.count(substituted)) {
-                            neighbors.push_back(substituted);
-                        }
-                    }
-                }
-            }
-
-            // Sort neighbors alphabetically to ensure consistent output
-            sort(neighbors.begin(), neighbors.end());
-
-            for (const auto& neighbor : neighbors) {
-                vector<string> new_path = current_path;
-                new_path.push_back(neighbor);
-                if (neighbor == end_word) return new_path;
-
-                q.push(new_path);
-                level_visited.push_back(neighbor);
             }
         }
-
-        for (const auto& word : level_visited) visited.insert(word);
     }
 
     return {}; // No ladder found
