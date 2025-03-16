@@ -4,7 +4,7 @@
 // Function to implement Dijkstra's algorithm
 vector<int> dijkstra_shortest_path(const Graph& G, int source, vector<int>& previous) {
     vector<int> distances(G.numVertices, INF); // Initialize distances to infinity
-    previous.resize(G.numVertices, -1);        // Initialize previous nodes to -1
+    previous.assign(G.numVertices, -1);        // Initialize previous nodes to -1
     distances[source] = 0;                     // Distance to source is 0
 
     // Min-heap priority queue: (distance, vertex)
