@@ -1,15 +1,12 @@
 #include "dijkstras.h"
-#include <iostream>
 
 int main(int argc, char* argv[]) {
-    if (argc != 4) {
-        std::cerr << "Usage: " << argv[0] << " <graph_file> <source> <destination>" << std::endl;
+    if (argc != 2) {
+        std::cerr << "Usage: " << argv[0] << " <graph_file>" << std::endl;
         return 1;
     }
 
     std::string filename = argv[1];
-    int source = std::stoi(argv[2]);
-    int destination = std::stoi(argv[3]);
     Graph G;
 
     try {
@@ -20,9 +17,23 @@ int main(int argc, char* argv[]) {
     }
 
     std::vector<int> previous;
-    std::vector<int> distances = dijkstra_shortest_path(G, source, previous);
-    std::vector<int> path = extract_shortest_path(distances, previous, destination);
-    print_path(path, distances[destination]);
+    std::vector<int> distances = dijkstra_shortest_path(G, 0, previous);
+
+    for (int i = 0; i < G.numVertices; ++i) {
+        std::vector<int> path = extract_shortest_path(distances, previous, i);
+        
+        // Print the path
+        for (size_t j = 0; j < path.size(); ++j) {
+            std::cout << path[j];
+            if (j < path.size() - 1) {
+                std::cout << " ";
+            }
+        }
+        std::cout << std::endl;
+
+        // Print the total cost
+        std::cout << "Total cost is " << distances[i] << std::endl;
+    }
 
     return 0;
 }
