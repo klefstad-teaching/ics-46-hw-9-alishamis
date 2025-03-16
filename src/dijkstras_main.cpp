@@ -22,16 +22,12 @@ int main(int argc, char* argv[]) {
     for (int i = 0; i < G.numVertices; ++i) {
         std::vector<int> path = extract_shortest_path(distances, previous, i);
         
-        // Print the path
         for (size_t j = 0; j < path.size(); ++j) {
             std::cout << path[j];
-            if (j < path.size() - 1) {
+            if (j < path.size() - 1)
                 std::cout << " ";
-            }
         }
         std::cout << std::endl;
-
-        // Print the total cost
         std::cout << "Total cost is " << distances[i] << std::endl;
     }
 

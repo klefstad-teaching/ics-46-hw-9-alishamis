@@ -11,32 +11,22 @@ bool edit_distance_within(const string& a, const string& b, int d) {
     const int len_a = a.length();
     const int len_b = b.length();
 
-    // Early exit for large length differences
     if (abs(len_a - len_b) > d) return false;
 
-    // Handle same-length substitution or identical words
     if (len_a == len_b) {
         int diff = 0;
-        for (int i = 0; i < len_a; ++i) {
+        for (int i = 0; i < len_a; ++i)
             if (a[i] != b[i] && ++diff > d) return false;
-        }
-        return true; // Identical words or within substitution distance
+        return true;
     }
-
-    // Handle insertion/deletion (length difference 1)
     const string& longer = len_a > len_b ? a : b;
     const string& shorter = len_a > len_b ? b : a;
 
     size_t i = 0, j = 0;
     int errors = 0;
     while (i < longer.length() && j < shorter.length()) {
-        if (longer[i] != shorter[j]) {
-            if (++errors > d) return false;
-            i++; // Skip one character in longer string
-        } else {
-            i++;
-            j++;
-        }
+        if (longer[i] != shorter[j]) { if (++errors > d) return false; i++;
+        } else {i++; j++;}
     }
     return true;
 }
@@ -47,13 +37,12 @@ vector<string> generate_word_ladder(const string& begin_word, const string& end_
         return {};
     }
 
-    // Check if end_word is in the dictionary
-    if (word_list.find(end_word) == word_list.end()) {
-        return {}; // No ladder possible if end word is not in dictionary
-    }
+    if (word_list.find(end_word) == word_list.end())
+        return {};
+
 
     unordered_set<string> dict(word_list.begin(), word_list.end());
-    dict.insert(end_word); // Ensure end_word is considered
+    dict.insert(end_word);
 
     queue<vector<string>> q;
     unordered_set<string> visited;
@@ -66,22 +55,18 @@ vector<string> generate_word_ladder(const string& begin_word, const string& end_
         q.pop();
         string last_word = current_path.back();
 
-        if (last_word == end_word) {
+        if (last_word == end_word)
             return current_path;
-        }
 
-        // Generate and sort neighbors alphabetically
         vector<string> neighbors;
         for (const auto& word : dict) {
             if (!visited.count(word) && is_adjacent(last_word, word)) {
-                if (word_list.count(word) || word == end_word) {
+                if (word_list.count(word) || word == end_word)
                     neighbors.push_back(word);
-                }
             }
         }
         sort(neighbors.begin(), neighbors.end());
 
-        // Process sorted neighbors
         for (const auto& word : neighbors) {
             vector<string> new_path = current_path;
             new_path.push_back(word);
@@ -90,15 +75,9 @@ vector<string> generate_word_ladder(const string& begin_word, const string& end_
         }
     }
 
-    return {}; // No ladder found
+    return {};
 }
 
-
-
-
-
-
-// Keep original implementations below (unchanged)
 void load_words(set<string>& word_list, const string& file_name) {
     ifstream file(file_name);
     if (!file.is_open()) {
@@ -107,9 +86,8 @@ void load_words(set<string>& word_list, const string& file_name) {
     }
 
     string word;
-    while (file >> word) {
+    while (file >> word)
         word_list.insert(word);
-    }
 
     file.close();
 }
@@ -130,21 +108,16 @@ bool is_adjacent(const string& word1, const string& word2) {
     return edit_distance_within(word1, word2, 1);
 }
 
+#define my_assert(e) {cout << #e << ((e) ? " passed" : " failed") << endl;}
 
 void verify_word_ladder() {
-    vector<string> test_ladder = {"hit", "hot", "dot", "dog", "cog"};
-    bool valid = true;
+    set<string> word_list;
+    load_words(word_list, "words.txt");
 
-    for (size_t i = 1; i < test_ladder.size(); ++i) {
-        if (!is_adjacent(test_ladder[i - 1], test_ladder[i])) {
-            valid = false;
-            break;
-        }
-    }
-
-    if (valid) {
-        cout << "The word ladder is valid." << endl;
-    } else {
-        cout << "The word ladder is not valid." << endl;
-    }
+    my_assert(generate_word_ladder("cat", "dog", word_list).size() == 4);
+    my_assert(generate_word_ladder("marty", "curls", word_list).size() == 6);
+    my_assert(generate_word_ladder("code", "data", word_list).size() == 6);
+    my_assert(generate_word_ladder("work", "play", word_list).size() == 6);
+    my_assert(generate_word_ladder("sleep", "awake", word_list).size() == 8);
+    my_assert(generate_word_ladder("car", "cheat", word_list).size() == 4);
 }
